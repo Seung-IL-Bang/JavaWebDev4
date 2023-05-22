@@ -2,6 +2,7 @@ package com.webdev.spring.config;
 
 import com.webdev.spring.security.APIUserDetailsService;
 import com.webdev.spring.security.filter.APILoginFilter;
+import com.webdev.spring.security.handler.APILoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -47,6 +48,11 @@ public class CustomSecurityConfig {
         // APILoginFilter
         APILoginFilter apiLoginFilter = new APILoginFilter("/generateToken");
         apiLoginFilter.setAuthenticationManager(authenticationManager);
+
+        // APILoginSuccessHandler
+        APILoginSuccessHandler successHandler = new APILoginSuccessHandler();
+        // SuccessHandler 세팅
+        apiLoginFilter.setAuthenticationSuccessHandler(successHandler);
 
         // APILoginFilter 위치 조정
         http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
