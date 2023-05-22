@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <title>Login</title>
 </head>
 <body>
 <button class="btn1">generateToken</button>
@@ -14,7 +14,11 @@
 
       axios.post("http://localhost:8080/generateToken", data)
           .then(res => {
-              console.log(res.data.accessToken)
+              const accessToken = res.data.accessToken
+              const refreshToken = res.data.refreshToken
+
+              localStorage.setItem("accessToken", accessToken)
+              localStorage.setItem("refreshToken", refreshToken)
           })
   }, false)
 </script>
