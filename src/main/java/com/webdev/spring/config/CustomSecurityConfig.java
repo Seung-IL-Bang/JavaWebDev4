@@ -2,7 +2,9 @@ package com.webdev.spring.config;
 
 import com.webdev.spring.security.APIUserDetailsService;
 import com.webdev.spring.security.filter.APILoginFilter;
+import com.webdev.spring.security.filter.TokenCheckFilter;
 import com.webdev.spring.security.handler.APILoginSuccessHandler;
+import com.webdev.spring.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -29,6 +31,8 @@ public class CustomSecurityConfig {
 
     private final APIUserDetailsService apiUserDetailsService;
 
+    private final JWTUtil jwtUtil;
+
     @Bean
     public SecurityFilterChain filterChain(final HttpSecurity http) throws Exception {
         log.info("-----------filterChain Configure------------");
@@ -49,13 +53,18 @@ public class CustomSecurityConfig {
         APILoginFilter apiLoginFilter = new APILoginFilter("/generateToken");
         apiLoginFilter.setAuthenticationManager(authenticationManager);
 
+        // APILoginFilter 위치 조정
+        http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
+
         // APILoginSuccessHandler
-        APILoginSuccessHandler successHandler = new APILoginSuccessHandler();
+        APILoginSuccessHandler successHandler = new APILoginSuccessHandler(jwtUtil);
         // SuccessHandler 세팅
         apiLoginFilter.setAuthenticationSuccessHandler(successHandler);
 
-        // APILoginFilter 위치 조정
-        http.addFilterBefore(apiLoginFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // '/api/' 로 시작하는 모든 경로는 TokenCheckFilter 동작
+        http.addFilterBefore(tokenCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+
 
         http
                 .csrf((csrf) -> csrf.disable()) // CSRF 토큰 비활성화
@@ -75,5 +84,9 @@ public class CustomSecurityConfig {
 
         return (web -> web.ignoring()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()));
+    }
+
+    private TokenCheckFilter tokenCheckFilter(JWTUtil jwtUtil) {
+        return new TokenCheckFilter(jwtUtil);
     }
 }

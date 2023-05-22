@@ -20,3 +20,9 @@ logging:
     com.springframework: info
     com.springframework.security: debug
     com.webdev: debug
+
+# jwt secret key
+com:
+  webdev:
+    jwt:
+      secret: ${JWT_SECRET}
