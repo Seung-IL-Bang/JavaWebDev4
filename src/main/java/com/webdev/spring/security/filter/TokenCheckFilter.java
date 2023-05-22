@@ -23,14 +23,14 @@ public class TokenCheckFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
         if (!path.startsWith("/api/")) { // '/api/' 경로로 시작하지 않는 경우
-            filterChain.doFilter(request,response); // token 검사를 하지 않고 다음 필터로 넘어간다.
+            filterChain.doFilter(request, response); // token 검사를 하지 않고 다음 필터로 넘어간다.
+            return; // 여기서 메소드를 반환해야지 '/api/' 이외 경로에 대해서 토큰 검증 진행을 하지 않는다.
         }
 
         log.info("Token Check Filter.......................");
@@ -38,9 +38,10 @@ public class TokenCheckFilter extends OncePerRequestFilter {
 
         // 토큰 검증 및 예외 처리
         try {
-            validateAccessToken(request);
+            Map<String, Object> payload = validateAccessToken(request);
             filterChain.doFilter(request, response);
         } catch (AccessTokenException accessTokenException) {
+            log.info("AccessTokenException====================");
             accessTokenException.sendResponseError(response);
         }
     }
