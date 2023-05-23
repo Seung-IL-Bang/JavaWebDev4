@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>sendJWT</title>
+</head>
+<body>
+
+<div class="result">
+
+</div>
+
+<button class="btn1">CALL SERVER</button>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const callServer = async () => {
+        console.log("call server 1...")
+
+        const accessToken = localStorage.getItem("accessToken")
+
+        if (!accessToken) {
+            throw 'Cannot Find Access Token'
+        }
+
+        const authHeader = {"Authorization": `Bearer ${accessToken}`}
+
+        try {
+            const res = await axios.get("http://localhost:8080/api/sample/doA",
+                {headers: authHeader});
+
+            return res.data;
+        } catch (err) {
+            if (err.response.data.msg === 'Expired Token') { // 만료된 Access Token
+                console.log("Refresh Your Token")
+
+                try {
+                    await callRefresh(); // refreshToken 호출
+                    console.log("new tokens...saved..."); // 새로운 토큰 저장 후 다시 원래 기능 호출
+                    return callServer();
+                } catch (refreshErr) {
+                    throw refreshErr.response.data.msg
+                }
+            } // end if
+        }
+    };
+
+    const callRefresh = async () => {
+        const accessToken = localStorage.getItem("accessToken")
+        const refreshToken = localStorage.getItem("refreshToken")
+
+        const tokens = {accessToken, refreshToken}
+        const res = await axios.post("http://localhost:8080/refreshToken", tokens)
+
+        localStorage.setItem("accessToken", res.data.accessToken)
+        localStorage.setItem("refreshToken", res.data.refreshToken)
+    }
+
+    const resultDiv = document.querySelector(".result")
+
+    document.querySelector(".btn1").addEventListener("click", () => {
+        callServer()
+            .then(res => {
+                console.log(res)
+            }).catch(error => {
+            alert(error)
+        });
+    }, false);
+</script>
+
+</body>
+</html>
