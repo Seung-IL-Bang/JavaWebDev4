@@ -2,6 +2,7 @@ package com.webdev.spring.config;
 
 import com.webdev.spring.security.APIUserDetailsService;
 import com.webdev.spring.security.filter.APILoginFilter;
+import com.webdev.spring.security.filter.RefreshTokenFilter;
 import com.webdev.spring.security.filter.TokenCheckFilter;
 import com.webdev.spring.security.handler.APILoginSuccessHandler;
 import com.webdev.spring.util.JWTUtil;
@@ -64,6 +65,9 @@ public class CustomSecurityConfig {
 
         // '/api/' 로 시작하는 모든 경로는 TokenCheckFilter 동작
         http.addFilterBefore(tokenCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+
+        // RefreshToken 호출 처리 - TokenCheckFilter 보다 앞으로 배치
+        http.addFilterBefore(new RefreshTokenFilter("/refreshToken", jwtUtil), TokenCheckFilter.class);
 
 
         http
