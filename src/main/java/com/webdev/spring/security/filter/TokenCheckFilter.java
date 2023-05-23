@@ -1,6 +1,7 @@
 package com.webdev.spring.security.filter;
 
 
+import com.webdev.spring.security.APIUserDetailsService;
 import com.webdev.spring.security.exception.AccessTokenException;
 import com.webdev.spring.util.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -12,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -22,6 +26,7 @@ import java.util.Map;
 public class TokenCheckFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+    private final APIUserDetailsService apiUserDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -36,9 +41,21 @@ public class TokenCheckFilter extends OncePerRequestFilter {
         log.info("Token Check Filter.......................");
         log.info("JWTUtil: " + jwtUtil);
 
-        // 토큰 검증 및 예외 처리
+        // 토큰 검증 및 예외 처리 ++ 회원 인증 정보 저장하기 in SecurityContextHolder
         try {
             Map<String, Object> payload = validateAccessToken(request);
+
+            String mid = (String) payload.get("mid");
+
+            log.info("mid: " + mid);
+
+            UserDetails userDetails = apiUserDetailsService.loadUserByUsername(mid);
+
+            UsernamePasswordAuthenticationToken authentication
+                    = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
             filterChain.doFilter(request, response);
         } catch (AccessTokenException accessTokenException) {
             log.info("AccessTokenException====================");

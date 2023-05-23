@@ -69,7 +69,7 @@ public class CustomSecurityConfig {
 
 
         // '/api/' 로 시작하는 모든 경로는 TokenCheckFilter 동작
-        http.addFilterBefore(tokenCheckFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(tokenCheckFilter(jwtUtil, apiUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         // RefreshToken 호출 처리 - TokenCheckFilter 보다 앞으로 배치
         http.addFilterBefore(new RefreshTokenFilter("/refreshToken", jwtUtil), TokenCheckFilter.class);
@@ -117,7 +117,7 @@ public class CustomSecurityConfig {
         return source;
     }
 
-    private TokenCheckFilter tokenCheckFilter(JWTUtil jwtUtil) {
-        return new TokenCheckFilter(jwtUtil);
+    private TokenCheckFilter tokenCheckFilter(JWTUtil jwtUtil, APIUserDetailsService apiUserDetailsService) {
+        return new TokenCheckFilter(jwtUtil, apiUserDetailsService);
     }
 }
